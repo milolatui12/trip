@@ -22,35 +22,39 @@ public class JwtUtil {
     private final Key accessTokenKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKeyAccessToken));
     private final Key refreshTokenKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKeyRefreshToken));
 
-    public String generateAccessToken(String username) {
+    public String generateAccessToken(String userId) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(userId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION)) // 1 giờ
                 .signWith(SignatureAlgorithm.HS256, accessTokenKey)
                 .compact();
     }
 
-    public String generateRefreshToken(String username) {
+    public String generateRefreshToken(String token) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(token)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION))
                 .signWith(SignatureAlgorithm.HS256, refreshTokenKey)
                 .compact();
     }
 
-    public String extractUsername(String token) {
+    public String extractUser(String token) {
         return Jwts.parserBuilder().setSigningKey(accessTokenKey).build().parseClaimsJws(token).getBody().getSubject();
     }
 
-    public boolean validateToken(String token, String username) {
+    public boolean validateRefreshToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(accessTokenKey).build().parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(refreshTokenKey).build().parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
             return false;
         }
+    }
+    public String extractRefreshToken(String token) {
+          return  Jwts.parserBuilder().setSigningKey(refreshTokenKey).build().parseClaimsJws(token).getBody().getSubject();
+
     }
 
     private boolean isTokenExpired(String token) {

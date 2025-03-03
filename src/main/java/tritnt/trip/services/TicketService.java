@@ -18,7 +18,7 @@ public class TicketService {
     private final UserRepository userRepository;
     private final TripRepository tripRepository;
 
-    public Ticket bookTicket(Long userId, Long tripId) {
+    public Ticket bookTicket(String userId, Long tripId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Trip trip = tripRepository.findById(tripId).orElseThrow(() -> new RuntimeException("Trip not found"));
 

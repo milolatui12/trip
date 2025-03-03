@@ -12,11 +12,11 @@ import tritnt.trip.services.TicketService;
 @RestController
 @RequestMapping("api/tickets")
 @RequiredArgsConstructor
-public class TicketController {
+public class    TicketController {
     private final TicketService ticketService;
 
     @PostMapping("/book/{userId}/{tripId}")
-    public ResponseEntity<Ticket> bookTicket(@PathVariable Long userId, @PathVariable Long tripId) {
+    public ResponseEntity<Ticket> bookTicket(@PathVariable String userId, @PathVariable Long tripId) {
         return ResponseEntity.ok(ticketService.bookTicket(userId, tripId));
     }
 }
