@@ -1,6 +1,5 @@
 package tritnt.trip.security;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -10,24 +9,22 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
-import java.util.function.Function;
 
 @Component
 public class JwtUtil {
-    private final String secretKeyAccessToken = "BG/w12HoXuE0t745w+59dAHxfG8PhMy+LlXe+i/Jrv4=";
-    private final String secretKeyRefreshToken = "0wPUu6Ba18k6VfDBrDLInmknE6zEFcKsayA3Lxb4iOM=";
+    private final String secretKeyAccessToken = System.getenv("JWT_SECRET_KEY");
+
     private final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 15;
     private final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 *7;
 
-    private final Key accessTokenKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKeyAccessToken));
-    private final Key refreshTokenKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKeyRefreshToken));
+    private final Key key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKeyAccessToken));
 
     public String generateAccessToken(String userId) {
         return Jwts.builder()
                 .setSubject(userId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION)) // 1 giờ
-                .signWith(SignatureAlgorithm.HS256, accessTokenKey)
+                .signWith(SignatureAlgorithm.HS256, key)
                 .compact();
     }
 
@@ -36,33 +33,24 @@ public class JwtUtil {
                 .setSubject(token)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION))
-                .signWith(SignatureAlgorithm.HS256, refreshTokenKey)
+                .signWith(SignatureAlgorithm.HS256, key)
                 .compact();
     }
 
     public String extractUser(String token) {
-        return Jwts.parserBuilder().setSigningKey(accessTokenKey).build().parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
     }
 
-    public boolean validateRefreshToken(String token) {
+    public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(refreshTokenKey).build().parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
             return false;
         }
     }
     public String extractRefreshToken(String token) {
-          return  Jwts.parserBuilder().setSigningKey(refreshTokenKey).build().parseClaimsJws(token).getBody().getSubject();
+          return  Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
 
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractClaim(token, Claims::getExpiration).before(new Date());
-    }
-
-    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = Jwts.parser().setSigningKey(secretKeyAccessToken).parseClaimsJws(token).getBody();
-        return claimsResolver.apply(claims);
     }
 }

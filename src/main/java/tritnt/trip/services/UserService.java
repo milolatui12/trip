@@ -3,6 +3,7 @@ package tritnt.trip.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import tritnt.trip.model.Role;
 import tritnt.trip.model.User;
 import tritnt.trip.repositories.UserRepository;
 
@@ -25,20 +26,9 @@ public class UserService {
         user.setName(name);
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
-        user.setRole(role);
+        user.setRole(Role.valueOf(role));
 
         return userRepository.save(user);
-    }
-
-    public boolean checkPassword(String username, String password) {
-        Optional<User> userOptional = userRepository.findByUsername(username);
-
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            return passwordEncoder.matches(password, user.getPassword());
-        }
-
-        return false;
     }
 
     public User login(String username, String password) {
